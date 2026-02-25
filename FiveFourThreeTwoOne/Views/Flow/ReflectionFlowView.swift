@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct ReflectionFlowView: View {
+    @Environment(AppSettings.self) private var appSettings
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -22,6 +23,10 @@ struct ReflectionFlowView: View {
     }
 
     var body: some View {
+        ZStack {
+            appSettings.backgroundColor
+                .ignoresSafeArea()
+
         Group {
             if showCountdown {
                 BreathingCountdownView {
@@ -41,6 +46,7 @@ struct ReflectionFlowView: View {
                 ProgressView("Preparing...")
             }
         }
+        } // ZStack
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

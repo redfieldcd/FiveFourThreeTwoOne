@@ -23,8 +23,10 @@ targets:
         buildPhase: none
     settings:
       base:
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "FiveFourThreeTwoOne uses the microphone to record your reflections."
-        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "FiveFourThreeTwoOne uses speech recognition to transcribe your voice into text."
+        INFOPLIST_KEY_CFBundleDisplayName: "5-4-3-2-1 Grounding"
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "5-4-3-2-1 Grounding uses your location to tag reflections with where you were."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "5-4-3-2-1 Grounding uses the microphone to record your voice reflections."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "5-4-3-2-1 Grounding uses speech recognition to transcribe your voice into text."
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
@@ -40,6 +42,8 @@ targets:
         CODE_SIGN_STYLE: "Automatic"
         DEVELOPMENT_TEAM: "8E8D53UH68"
         CODE_SIGN_IDENTITY: "Apple Development"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
 
   FiveFourThreeTwoOneTests:
     type: bundle.unit-test

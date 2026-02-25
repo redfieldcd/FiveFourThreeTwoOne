@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
+    @Environment(AppSettings.self) private var appSettings
     @Environment(\.modelContext) private var modelContext
     @Query(
         filter: #Predicate<Reflection> { $0.isComplete == true },
@@ -15,10 +16,15 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            if reflections.isEmpty {
-                EmptyStateView()
-            } else {
-                reflectionList
+            appSettings.backgroundColor
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                if reflections.isEmpty {
+                    EmptyStateView()
+                } else {
+                    reflectionList
+                }
             }
 
             newReflectionButton
@@ -40,7 +46,7 @@ struct HomeView: View {
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
                 CustomPromptsView()
-                    .navigationTitle("Voice Prompts")
+                    .navigationTitle("Settings")
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Done") { showingSettings = false }
@@ -71,6 +77,7 @@ struct HomeView: View {
                 .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 
     private var newReflectionButton: some View {

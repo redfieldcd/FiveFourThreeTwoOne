@@ -35,52 +35,58 @@ struct BreathingCountdownView: View {
     @State private var breathScale: CGFloat = 0.85
     @State private var audioPlayer = BreathingAudioPlayer()
 
+    @Environment(AppSettings.self) private var appSettings
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let circleSize: CGFloat = 200
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        ZStack {
+            appSettings.backgroundColor
+                .ignoresSafeArea()
 
-            ZStack {
-                // Background ring
-                Circle()
-                    .stroke(Color.accentColor.opacity(0.15), lineWidth: 6)
-                    .frame(width: circleSize, height: circleSize)
+            VStack(spacing: 32) {
+                Spacer()
 
-                // Animated progress ring
-                Circle()
-                    .trim(from: 0, to: ringProgress)
-                    .stroke(
-                        Color.accentColor,
-                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
-                    )
-                    .frame(width: circleSize, height: circleSize)
-                    .rotationEffect(.degrees(-90))
+                ZStack {
+                    // Background ring
+                    Circle()
+                        .stroke(Color.accentColor.opacity(0.15), lineWidth: 6)
+                        .frame(width: circleSize, height: circleSize)
 
-                // Breathing circle
-                Circle()
-                    .fill(Color.accentColor.opacity(0.08))
-                    .frame(width: circleSize - 30, height: circleSize - 30)
-                    .scaleEffect(breathScale)
+                    // Animated progress ring
+                    Circle()
+                        .trim(from: 0, to: ringProgress)
+                        .stroke(
+                            Color.accentColor,
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                        .frame(width: circleSize, height: circleSize)
+                        .rotationEffect(.degrees(-90))
 
-                // Countdown number
-                VStack(spacing: 8) {
-                    Text("\(countdown)")
-                        .font(.system(size: 64, weight: .light, design: .rounded))
-                        .foregroundStyle(Color.accentColor)
-                        .contentTransition(.numericText(countsDown: true))
+                    // Breathing circle
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.08))
+                        .frame(width: circleSize - 30, height: circleSize - 30)
+                        .scaleEffect(breathScale)
+
+                    // Countdown number
+                    VStack(spacing: 8) {
+                        Text("\(countdown)")
+                            .font(.system(size: 64, weight: .light, design: .rounded))
+                            .foregroundStyle(Color.accentColor)
+                            .contentTransition(.numericText(countsDown: true))
+                    }
                 }
+
+                Text("Take a big breath")
+                    .font(.title2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                    .opacity(textOpacity)
+
+                Spacer()
             }
-
-            Text("Take a big breath")
-                .font(.title2)
-                .fontWeight(.medium)
-                .foregroundStyle(.primary)
-                .opacity(textOpacity)
-
-            Spacer()
         }
         .onAppear {
             // Ensure background music is fully stopped before playing

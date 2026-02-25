@@ -12,6 +12,9 @@ final class ReflectionFlowViewModel {
     var isFlowComplete: Bool = false
     var isGuidanceSpeaking: Bool = false
 
+    /// Location name fetched at the start of the session.
+    private var fetchedLocationName: String?
+
     var currentSenseType: SenseType {
         SenseType.orderedCases[currentStepIndex]
     }
@@ -24,6 +27,12 @@ final class ReflectionFlowViewModel {
         self.voiceGuide = voiceGuide
         self.reflection = Reflection()
         modelContext.insert(reflection)
+
+        // Fetch location in the background as soon as the flow starts
+        Task {
+            let name = await LocationService.shared.fetchCurrentLocationName()
+            self.fetchedLocationName = name
+        }
     }
 
     func speakGuidance() async {
@@ -39,7 +48,9 @@ final class ReflectionFlowViewModel {
             currentStepIndex += 1
         } else {
             reflection.isComplete = true
-            reflection.title = "Reflection - \(reflection.createdAt.formatted(date: .abbreviated, time: .shortened))"
+            reflection.locationName = fetchedLocationName
+            reflection.title = fetchedLocationName
+                ?? "Reflection - \(reflection.createdAt.formatted(date: .abbreviated, time: .shortened))"
             try? modelContext.save()
             isFlowComplete = true
         }

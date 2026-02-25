@@ -36,6 +36,7 @@ final class CustomPromptsViewModel {
         stopCurrentAction()
 
         do {
+            BackgroundMusicService.shared.stop()
             try storage.ensureDirectoryExists()
             let url = storage.fileURL(for: senseType)
             // Remove existing file before re-recording
@@ -45,6 +46,7 @@ final class CustomPromptsViewModel {
             promptStates[senseType] = .recording
         } catch {
             errorMessage = "Could not start recording: \(error.localizedDescription)"
+            BackgroundMusicService.shared.play()
         }
     }
 
@@ -53,6 +55,7 @@ final class CustomPromptsViewModel {
         _ = audioRecorder.stopRecording()
         promptStates[senseType] = .hasRecording
         activeSenseType = nil
+        BackgroundMusicService.shared.play()
     }
 
     func playPrompt(for senseType: SenseType) {
@@ -60,6 +63,8 @@ final class CustomPromptsViewModel {
 
         let url = storage.fileURL(for: senseType)
         do {
+            BackgroundMusicService.shared.stop()
+
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default)
             try session.setActive(true)
@@ -79,11 +84,13 @@ final class CustomPromptsViewModel {
                         self.promptStates[senseType] = .hasRecording
                         self.activeSenseType = nil
                         self.audioPlayer = nil
+                        BackgroundMusicService.shared.play()
                     }
                 }
             }
         } catch {
             errorMessage = "Could not play recording: \(error.localizedDescription)"
+            BackgroundMusicService.shared.play()
         }
     }
 
@@ -95,6 +102,7 @@ final class CustomPromptsViewModel {
         playbackTimer = nil
         promptStates[senseType] = .hasRecording
         activeSenseType = nil
+        BackgroundMusicService.shared.play()
     }
 
     func deletePrompt(for senseType: SenseType) {
@@ -111,20 +119,26 @@ final class CustomPromptsViewModel {
 
     private func stopCurrentAction() {
         guard let active = activeSenseType else { return }
+        var wasActive = false
         switch promptStates[active] {
         case .recording:
             _ = audioRecorder.stopRecording()
             // If we were recording a new file, check if it exists now
             promptStates[active] = storage.hasCustomPrompt(for: active) ? .hasRecording : .none
+            wasActive = true
         case .playing:
             audioPlayer?.stop()
             audioPlayer = nil
             playbackTimer?.invalidate()
             playbackTimer = nil
             promptStates[active] = .hasRecording
+            wasActive = true
         default:
             break
         }
         activeSenseType = nil
+        if wasActive {
+            BackgroundMusicService.shared.play()
+        }
     }
 }

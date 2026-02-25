@@ -3,6 +3,8 @@ import SwiftData
 
 @main
 struct FiveFourThreeTwoOneApp: App {
+    @State private var appSettings = AppSettings()
+
     var body: some Scene {
         WindowGroup {
             NavigationStack {
@@ -11,6 +13,9 @@ struct FiveFourThreeTwoOneApp: App {
                         ReflectionDetailView(reflection: reflection)
                     }
             }
+            .environment(appSettings)
+            .preferredColorScheme(appSettings.colorScheme)
+            .tint(appSettings.themeAccentColor)
         }
         .modelContainer(for: [Reflection.self, SenseEntry.self])
     }
