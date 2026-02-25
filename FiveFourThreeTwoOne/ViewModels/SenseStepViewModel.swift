@@ -11,6 +11,8 @@ final class SenseStepViewModel {
     var isRecording: Bool = false
     var manualText: String = ""
     var inputMode: InputMode = .voice
+    /// Item count from speech pause detection (voice mode).
+    var voiceItemCount: Int = 0
 
     enum InputMode {
         case voice
@@ -23,14 +25,17 @@ final class SenseStepViewModel {
 
     /// Number of items the user has mentioned so far, capped at the expected count.
     var detectedItemCount: Int {
-        let text = inputMode == .voice ? transcribedText : manualText
-        return min(Self.countItems(in: text), senseType.count)
+        if inputMode == .voice {
+            return min(voiceItemCount, senseType.count)
+        } else {
+            return min(Self.countItems(in: manualText), senseType.count)
+        }
     }
 
     /// Total items expected for this sense step.
     var expectedItemCount: Int { senseType.count }
 
-    // MARK: - Item Counting
+    // MARK: - Item Counting (for manual text input)
 
     static func countItems(in text: String) -> Int {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -75,8 +80,20 @@ final class SenseStepViewModel {
         try speechRecognizer.startTranscribing()
         isRecording = true
 
-        for await partial in speechRecognizer.transcriptionStream {
-            transcribedText = partial
+        // Listen to both streams concurrently
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { [weak self] in
+                guard let self else { return }
+                for await partial in self.speechRecognizer.transcriptionStream {
+                    await MainActor.run { self.transcribedText = partial }
+                }
+            }
+            group.addTask { [weak self] in
+                guard let self else { return }
+                for await count in self.speechRecognizer.itemCountStream {
+                    await MainActor.run { self.voiceItemCount = count }
+                }
+            }
         }
     }
 
