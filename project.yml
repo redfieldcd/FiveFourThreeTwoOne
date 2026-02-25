@@ -1,0 +1,70 @@
+name: FiveFourThreeTwoOne
+options:
+  bundleIdPrefix: com.reflection
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: "YES"
+
+targets:
+  FiveFourThreeTwoOne:
+    type: application
+    platform: iOS
+    sources:
+      - path: FiveFourThreeTwoOne
+        excludes:
+          - "Preview Content/**"
+      - path: FiveFourThreeTwoOne/Preview Content
+        buildPhase: none
+    settings:
+      base:
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "FiveFourThreeTwoOne uses the microphone to record your reflections."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "FiveFourThreeTwoOne uses speech recognition to transcribe your voice into text."
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.reflection.FiveFourThreeTwoOne"
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        SWIFT_EMIT_LOC_STRINGS: "YES"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "AccentColor"
+        SWIFT_STRICT_CONCURRENCY: "minimal"
+
+  FiveFourThreeTwoOneTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: FiveFourThreeTwoOneTests
+    dependencies:
+      - target: FiveFourThreeTwoOne
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.reflection.FiveFourThreeTwoOneTests"
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/FiveFourThreeTwoOne.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FiveFourThreeTwoOne"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_STRICT_CONCURRENCY: "minimal"
+
+  FiveFourThreeTwoOneUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: FiveFourThreeTwoOneUITests
+    dependencies:
+      - target: FiveFourThreeTwoOne
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: "com.reflection.FiveFourThreeTwoOneUITests"
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        TEST_TARGET_NAME: "FiveFourThreeTwoOne"
+        SWIFT_STRICT_CONCURRENCY: "minimal"
