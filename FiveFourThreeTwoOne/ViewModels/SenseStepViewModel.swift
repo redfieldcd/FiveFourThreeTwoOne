@@ -37,25 +37,10 @@ final class SenseStepViewModel {
 
     // MARK: - Item Counting (for manual text input)
 
+    /// Delegates to the shared `ItemCountingEngine` so that manual and voice
+    /// input modes use identical text-parsing logic.
     static func countItems(in text: String) -> Int {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return 0 }
-
-        // Split on commas, periods, newlines, and the word "and" (as separator)
-        let separatorPattern = #",|\.\s|\n|(?:^|\s)and\s"#
-        let segments = trimmed
-            .replacingOccurrences(
-                of: separatorPattern,
-                with: "|||",
-                options: .regularExpression,
-                range: trimmed.startIndex..<trimmed.endIndex
-            )
-            .components(separatedBy: "|||")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-
-        // At minimum 1 item if there's any text
-        return max(segments.count, 1)
+        ItemCountingEngine.countItems(in: text)
     }
 
     init(senseType: SenseType,

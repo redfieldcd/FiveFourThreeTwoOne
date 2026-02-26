@@ -8,9 +8,7 @@ final class SpeechRecognitionService: SpeechRecognizing {
     private let audioEngine = AVAudioEngine()
     private var streamContinuation: AsyncStream<String>.Continuation?
     private var itemCountContinuation: AsyncStream<Int>.Continuation?
-
-    /// Minimum pause duration (seconds) between segments to count as a new item.
-    private let pauseThreshold: TimeInterval = 0.6
+    private let countingEngine = ItemCountingEngine()
 
     private(set) var status: SpeechRecognitionStatus = .notStarted
 
@@ -66,11 +64,25 @@ final class SpeechRecognitionService: SpeechRecognizing {
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self else { return }
             if let result {
-                let text = result.bestTranscription.formattedString
+                let transcription = result.bestTranscription
+                let text = transcription.formattedString
                 self.streamContinuation?.yield(text)
 
-                let itemCount = self.countItemsFromSegments(result.bestTranscription)
-                self.itemCountContinuation?.yield(itemCount)
+                // Convert SFTranscriptionSegments to engine-friendly structs
+                let segmentData = transcription.segments.map { seg in
+                    ItemCountingEngine.Segment(
+                        substring: seg.substring,
+                        timestamp: seg.timestamp,
+                        duration: seg.duration
+                    )
+                }
+
+                if let count = self.countingEngine.process(
+                    formattedString: text,
+                    segments: segmentData
+                ) {
+                    self.itemCountContinuation?.yield(count)
+                }
             }
 
             if error != nil || (result?.isFinal ?? false) {
@@ -101,54 +113,10 @@ final class SpeechRecognitionService: SpeechRecognizing {
         itemCountContinuation = nil
         recognitionTask = nil
         recognitionRequest = nil
+        countingEngine.reset()
         status = .notStarted
 
         return finalText
-    }
-
-    // MARK: - Pause-Based Item Counting
-
-    /// Counts distinct items by detecting pauses between speech segments and punctuation boundaries.
-    private func countItemsFromSegments(_ transcription: SFTranscription) -> Int {
-        let segments = transcription.segments
-        guard !segments.isEmpty else { return 0 }
-
-        // Start with 1 item (the first thing they say)
-        var count = 1
-
-        for i in 1..<segments.count {
-            let prev = segments[i - 1]
-            let curr = segments[i]
-
-            // Gap between end of previous segment and start of current segment
-            let prevEnd = prev.timestamp + prev.duration
-            let gap = curr.timestamp - prevEnd
-
-            // Check if there's a meaningful pause
-            if gap >= pauseThreshold {
-                count += 1
-                continue
-            }
-
-            // Also check for punctuation-based separators in the substring
-            let prevText = prev.substring.trimmingCharacters(in: .whitespacesAndNewlines)
-            if prevText.hasSuffix(",") || prevText.hasSuffix(".") || prevText.hasSuffix(";") {
-                count += 1
-                continue
-            }
-
-            // Check for the word "and" as a separator between items
-            let currText = curr.substring.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-            if currText == "and" || prevText.lowercased() == "and" {
-                // "and" by itself indicates a list transition — the next real word is a new item
-                // but don't double-count; "and" itself isn't an item
-                if prevText.lowercased() == "and" && !currText.isEmpty && currText != "and" {
-                    count += 1
-                }
-            }
-        }
-
-        return max(count, 1)
     }
 
     private func cleanupAudioEngine() {
