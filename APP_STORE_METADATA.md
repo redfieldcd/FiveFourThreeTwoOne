@@ -35,7 +35,7 @@ HOW IT WORKS:
 FEATURES:
 - Guided grounding flow with a calming breathing exercise to start
 - Voice or text input — speak your reflections or type them manually
-- Real-time speech recognition that intelligently counts your sensory items
+- Real-time speech recognition with tap-to-confirm — speak, then tap to count each item
 - Voice guidance with soothing audio prompts for each step
 - Save and revisit past reflections to track your mindfulness journey
 - Location tagging — remember where you found your calm
@@ -67,16 +67,10 @@ Initial release! Experience the 5-4-3-2-1 grounding technique with guided voice 
 ---
 
 ## Support URL
-[You need to provide a support URL — this can be:]
-- A simple webpage or GitHub Pages site
-- A link to a contact form
-- Example: https://yourwebsite.com/support
+https://redfieldcd.github.io/FiveFourThreeTwoOne/support.html
 
 ## Privacy Policy URL
-[Host the PRIVACY_POLICY.md content at a public URL, such as:]
-- GitHub Pages
-- A simple static webpage
-- Example: https://yourwebsite.com/privacy
+https://redfieldcd.github.io/FiveFourThreeTwoOne/privacy.html
 
 ---
 

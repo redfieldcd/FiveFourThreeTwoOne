@@ -11,8 +11,9 @@ final class SenseStepViewModel {
     var isRecording: Bool = false
     var manualText: String = ""
     var inputMode: InputMode = .voice
-    /// Item count from speech pause detection (voice mode).
-    var voiceItemCount: Int = 0
+
+    /// Number of items the user has confirmed by tapping (voice mode).
+    var confirmedItemCount: Int = 0
 
     enum InputMode {
         case voice
@@ -23,10 +24,10 @@ final class SenseStepViewModel {
         inputMode == .voice ? transcribedText : manualText
     }
 
-    /// Number of items the user has mentioned so far, capped at the expected count.
+    /// Number of items the user has confirmed so far, capped at the expected count.
     var detectedItemCount: Int {
         if inputMode == .voice {
-            return min(voiceItemCount, senseType.count)
+            return min(confirmedItemCount, senseType.count)
         } else {
             return min(Self.countItems(in: manualText), senseType.count)
         }
@@ -35,10 +36,15 @@ final class SenseStepViewModel {
     /// Total items expected for this sense step.
     var expectedItemCount: Int { senseType.count }
 
+    /// Whether the user has confirmed all required items.
+    var allItemsConfirmed: Bool {
+        detectedItemCount >= expectedItemCount
+    }
+
     // MARK: - Item Counting (for manual text input)
 
-    /// Delegates to the shared `ItemCountingEngine` so that manual and voice
-    /// input modes use identical text-parsing logic.
+    /// Delegates to the shared `ItemCountingEngine` so that manual input
+    /// mode uses text-parsing logic to count items.
     static func countItems(in text: String) -> Int {
         ItemCountingEngine.countItems(in: text)
     }
@@ -50,6 +56,19 @@ final class SenseStepViewModel {
         self.speechRecognizer = speechRecognizer
         self.audioRecorder = audioRecorder
     }
+
+    // MARK: - Tap-to-Confirm
+
+    /// Called when the user taps anywhere on screen to confirm they've named an item.
+    /// Returns `true` if the tap was counted (i.e., not already at max).
+    @discardableResult
+    func confirmItem() -> Bool {
+        guard confirmedItemCount < senseType.count else { return false }
+        confirmedItemCount += 1
+        return true
+    }
+
+    // MARK: - Recording
 
     func startRecording() async throws {
         let audioDir = FileManager.default
@@ -65,20 +84,9 @@ final class SenseStepViewModel {
         try speechRecognizer.startTranscribing()
         isRecording = true
 
-        // Listen to both streams concurrently
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { [weak self] in
-                guard let self else { return }
-                for await partial in self.speechRecognizer.transcriptionStream {
-                    await MainActor.run { self.transcribedText = partial }
-                }
-            }
-            group.addTask { [weak self] in
-                guard let self else { return }
-                for await count in self.speechRecognizer.itemCountStream {
-                    await MainActor.run { self.voiceItemCount = count }
-                }
-            }
+        // Listen to the transcription stream
+        for await partial in speechRecognizer.transcriptionStream {
+            transcribedText = partial
         }
     }
 

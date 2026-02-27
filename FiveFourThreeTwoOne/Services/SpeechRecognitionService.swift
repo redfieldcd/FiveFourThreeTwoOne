@@ -7,20 +7,12 @@ final class SpeechRecognitionService: SpeechRecognizing {
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
     private var streamContinuation: AsyncStream<String>.Continuation?
-    private var itemCountContinuation: AsyncStream<Int>.Continuation?
-    private let countingEngine = ItemCountingEngine()
 
     private(set) var status: SpeechRecognitionStatus = .notStarted
 
     var transcriptionStream: AsyncStream<String> {
         AsyncStream { continuation in
             self.streamContinuation = continuation
-        }
-    }
-
-    var itemCountStream: AsyncStream<Int> {
-        AsyncStream { continuation in
-            self.itemCountContinuation = continuation
         }
     }
 
@@ -64,25 +56,8 @@ final class SpeechRecognitionService: SpeechRecognizing {
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             guard let self else { return }
             if let result {
-                let transcription = result.bestTranscription
-                let text = transcription.formattedString
+                let text = result.bestTranscription.formattedString
                 self.streamContinuation?.yield(text)
-
-                // Convert SFTranscriptionSegments to engine-friendly structs
-                let segmentData = transcription.segments.map { seg in
-                    ItemCountingEngine.Segment(
-                        substring: seg.substring,
-                        timestamp: seg.timestamp,
-                        duration: seg.duration
-                    )
-                }
-
-                if let count = self.countingEngine.process(
-                    formattedString: text,
-                    segments: segmentData
-                ) {
-                    self.itemCountContinuation?.yield(count)
-                }
             }
 
             if error != nil || (result?.isFinal ?? false) {
@@ -109,11 +84,8 @@ final class SpeechRecognitionService: SpeechRecognizing {
 
         streamContinuation?.finish()
         streamContinuation = nil
-        itemCountContinuation?.finish()
-        itemCountContinuation = nil
         recognitionTask = nil
         recognitionRequest = nil
-        countingEngine.reset()
         status = .notStarted
 
         return finalText
